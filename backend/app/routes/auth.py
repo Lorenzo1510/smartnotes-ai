@@ -6,6 +6,7 @@ from app.schemas.auth import UserCreate, UserLogin, Token
 from app.services.auth_service import hash_password, verify_password
 from app.security.jwt import create_access_token
 from sqlalchemy.exc import IntegrityError
+from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter()
 
@@ -28,9 +29,9 @@ def signup(user_data: UserCreate, db: Session = Depends(get_db)):
     return {"access_token": token, "token_type": "bearer"}
 
 @router.post("/login", response_model=Token)
-def login(data: UserLogin, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.username == data.username).first()
-    if not user or not verify_password(data.password, user.hashed_password):
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == form_data.username).first()
+    if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     token = create_access_token({"sub": user.username})
     return {"access_token": token, "token_type": "bearer"}

@@ -3,12 +3,12 @@ from typing import List, Optional
 
 class NoteBase(BaseModel):
     title: str
-    content: str
+    content: Optional[str] = None
 
 class NoteCreate(NoteBase):
     pass
 
-class Note(NoteBase):
+class NoteOut(NoteBase):
     id: int
     class Config:
         orm_mode = True
@@ -23,7 +23,7 @@ class UserCreate(UserBase):
 
 class User(UserBase):
     id: int
-    notes: List[Note] = []
+    notes: List[NoteBase] = []
 
     class Config:
         orm_mode = True
