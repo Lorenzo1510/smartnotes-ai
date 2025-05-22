@@ -15,6 +15,12 @@ class NoteOut(NoteBase):
     class Config:
         orm_mode = True
 
+class NoteAIRequest(BaseModel):
+    prompt: str
+    stile: Optional[str] = "schematico"
+    lingua: Optional[str] = "italiano"
+    lunghezza: Optional[str] = "media"
+
 
 class UserBase(BaseModel):
     username: str

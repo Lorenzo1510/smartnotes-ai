@@ -5,6 +5,7 @@ from app.security.jwt import get_current_user
 from app.models.user import User
 from app.models.note import Note
 from app.schemas.schemas import NoteCreate
+from app.schemas.schemas import NoteAIRequest
 import requests
 
 router = APIRouter(prefix="/ai", tags=["ai"])
@@ -13,22 +14,25 @@ OLLAMA_URL = "http://localhost:11434/api/generate"  # Ollama locale
 
 @router.post("/notes", response_model=NoteCreate)
 def generate_note(
-    prompt: str,
+    data: NoteAIRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     try:
+        prompt_istruzioni = (
+            f"Scrivi una nota in stile {data.stile}, in {data.lingua}, "
+            f"di lunghezza {data.lunghezza}, basata su questo contenuto: {data.prompt}"
+        )
+
+        # CHIAMATA a Ollama
         response = requests.post(
-            OLLAMA_URL,
+            "http://localhost:11434/api/generate",
             json={
-                "model": "mistral",  # puoi usare anche "llama2", "gemma", ecc.
-                "prompt": f"Scrivi una nota chiara e sintetica su questo argomento:\n{prompt}",
+                "model": "llama3",
+                "prompt": prompt_istruzioni,
                 "stream": False
             }
         )
-
-        if response.status_code != 200:
-            raise HTTPException(status_code=500, detail="Errore nella generazione della nota")
 
         result = response.json()
         content = result.get("response", "").strip()
@@ -42,3 +46,4 @@ def generate_note(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Errore AI: {str(e)}")
+    
