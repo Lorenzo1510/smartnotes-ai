@@ -1,17 +1,21 @@
-import api from "./axios";
-
-export const login = async (username: string, password: string) => {
-  const response = await api.post("/login", {
-    username,
-    password,
+export async function login(username: string, password: string): Promise<string> {
+  const response = await fetch("http://localhost:8000/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      username,
+      password,
+    }),
   });
-  return response.data.access_token;
-};
 
-export const register = async (username: string, password: string) => {
-  const response = await api.post("/register", {
-    username,
-    password,
-  });
-  return response.data;
-};
+  if (!response.ok) {
+    const err = await response.text();
+    console.error("Errore login:", err); // DEBUG
+    throw new Error("Login fallito");
+  }
+
+  const data = await response.json();
+  return data.access_token;
+}

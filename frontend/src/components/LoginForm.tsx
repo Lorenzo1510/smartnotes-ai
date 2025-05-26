@@ -1,38 +1,51 @@
 import React, { useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { login } from "../api/auth";
 
-const LoginForm: React.FC = () => {
+interface LoginFormProps {
+  onLogin: (token: string) => void;
+}
+
+const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
+  const [error, setError] = useState("");
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     try {
-      const response = await axios.post("http://localhost:8000/login", {
-        username,
-        password,
-      }, {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        }
-      });
-
-      const token = response.data.access_token;
-      localStorage.setItem("token", token);
-      navigate("/home");
+      const token = await login(username, password);
+      localStorage.setItem("token", token); 
+      onLogin(token); 
     } catch (err) {
-      alert("Credenziali non valide.");
+      console.error("Errore login:", err);
+      setError("Login fallito. Controlla le credenziali.");
     }
   };
 
   return (
-    <form onSubmit={handleLogin}>
+    <form onSubmit={handleSubmit} className="login-form">
       <h2>Login</h2>
-      <input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} />
-      <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
-      <button type="submit">Login</button>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      <div>
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+        />
+      </div>
+      <div>
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+      </div>
+      <button type="submit">Accedi</button>
     </form>
   );
 };
